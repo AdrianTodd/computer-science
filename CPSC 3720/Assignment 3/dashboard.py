@@ -47,6 +47,14 @@ def load_data():
 # Load the data
 df_cleaned = load_data()
 
+# Sidebar Controls
+st.sidebar.header("Dashboard Controls")
+window_days = st.sidebar.slider(
+    label="Select Running Average Window (Days)",
+    min_value=1,
+    max_value=30,
+    value=7,  # Default value
+)
 
 if not df_cleaned.empty:
     # Data Preparation
@@ -56,7 +64,6 @@ if not df_cleaned.empty:
     df = df_cleaned.loc[start_date:end_date]
 
     # Data Manipulation
-    window_days = 7
     window_size_hours = 24 * window_days
     df["demand_avg"] = df["demand_mw"].rolling(window=window_size_hours).mean()
     df["price_avg"] = df["price_cad"].rolling(window=window_size_hours).mean()
