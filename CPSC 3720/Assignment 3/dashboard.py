@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import datetime
 
 # Page configuration
 st.set_page_config(page_title="AESO Data Dashboard", page_icon="⚡", layout="wide")
@@ -47,28 +48,56 @@ def load_data():
 # Load the data
 df_cleaned = load_data()
 
-# Sidebar Controls
-st.sidebar.header("Dashboard Controls")
-window_days = st.sidebar.slider(
-    label="Select Running Average Window (Days)",
-    min_value=1,
-    max_value=30,
-    value=7,  # Default value
-)
-
+# Check if data is loaded before creating controls
 if not df_cleaned.empty:
-    # Data Preparation
-    # Filter for 2 years of data: 2023 - 2025
-    start_date = "2023-08-01 0:00"
-    end_date = "2025-08-01 0:00"
+
+    # Sidebar Controls
+    st.sidebar.header("Dashboard Controls")
+    window_days = st.sidebar.slider(
+        label="Select Running Average Window (Days)",
+        min_value=1,
+        max_value=30,
+        value=7,  # Default value
+    )
+
+    # Dynamic date range
+    start_date = df_cleaned.index.min().date()
+    end_date = df_cleaned.index.max().date()
     df = df_cleaned.loc[start_date:end_date]
 
-    # Data Manipulation
-    window_size_hours = 24 * window_days
-    df["demand_avg"] = df["demand_mw"].rolling(window=window_size_hours).mean()
-    df["price_avg"] = df["price_cad"].rolling(window=window_size_hours).mean()
+    # Date Range Dashboard Control
+    date_range = st.sidebar.date_input(
+        "Select Date Range",
+        # Use 2023-2025 as the default range
+        value=(datetime.date(2023, 7, 31), datetime.date(2025, 7, 31)),
+        min_value=start_date,
+        max_value=end_date,
+        format="YYYY-MM-DD",
+    )
+
+# Main Dashboard
+st.title("⚡ Alberta Electricity (AESO) Data Dashboard")
+
+
+if not df_cleaned.empty and len(date_range) == 2:
+
+    start_date, end_date = date_range
+
+    # Filter data based on selected date range
+    df_filtered = df_cleaned.loc[start_date:end_date].copy()
 
     # Visualization
+
+    # Data Manipulation
+
+    # Running Average Calculation
+    window_size_hours = 24 * window_days
+    df_filtered["demand_avg"] = (
+        df_filtered["demand_mw"].rolling(window=window_size_hours).mean()
+    )
+    df_filtered["price_avg"] = (
+        df_filtered["price_cad"].rolling(window=window_size_hours).mean()
+    )
 
     sns.set_theme(style="darkgrid")
 
@@ -76,11 +105,14 @@ if not df_cleaned.empty:
     fig, (ax1, ax2) = plt.subplots(nrows=2, ncols=1, figsize=(15, 10), sharex=True)
 
     # Electricity Demand Plot
-    ax1.set_title("Alberta Electricity Demand (AIL) 2023 - 2025", fontsize=16)
+    ax1.set_title(
+        "Alberta Electricity Demand (AIL)",
+        fontsize=16,
+    )
     # Plot raw hourly demand (Series 1)
     sns.lineplot(
-        data=df,
-        x=df.index,
+        data=df_filtered,
+        x=df_filtered.index,
         y="demand_mw",
         label="Hourly Demand",
         color="lightblue",
@@ -89,8 +121,8 @@ if not df_cleaned.empty:
     )
     # Plot 7-day running average of hourly demand (Series 2)
     sns.lineplot(
-        data=df,
-        x=df.index,
+        data=df_filtered,
+        x=df_filtered.index,
         y="demand_avg",
         label=f"{window_days}-Day Avg.",
         color="blue",
@@ -101,13 +133,13 @@ if not df_cleaned.empty:
     ax1.legend()
 
     # --- Electricity Pool Price Plot ---
-    ax2.set_title("Alberta Electricity Price 2023 - 2025", fontsize=16)
+    ax2.set_title("Alberta Electricity Price", fontsize=16)
 
     # Subplot 2:
     # Raw Hourly Price (Series 3)
     sns.lineplot(
-        data=df,
-        x=df.index,
+        data=df_filtered,
+        x=df_filtered.index,
         y="price_cad",
         label="Hourly Price",
         color="lightsalmon",
@@ -116,8 +148,8 @@ if not df_cleaned.empty:
     )
     # Plot 7-day running average of hourly price (Series 4)
     sns.lineplot(
-        data=df,
-        x=df.index,
+        data=df_filtered,
+        x=df_filtered.index,
         y="price_avg",
         label=f"{window_days}-Day Avg.",
         color="red",
@@ -132,7 +164,7 @@ if not df_cleaned.empty:
     ax2.set_ylim(-50, 1050)
 
     plt.suptitle(
-        "Alberta Electricity Demand and Price Analysis (2023 - 2025)",
+        f"Alberta Electricity Demand and Price Analysis {start_date} - {end_date}",
         fontsize=20,
         y=1.03,
     )
@@ -142,6 +174,11 @@ if not df_cleaned.empty:
     st.pyplot(fig)
 
     # Show Raw Data Table
-    if st.checkbox("Show 2023 Raw Data Table"):
-        st.subheader("Raw Data (2023)")
-        st.dataframe(df)
+    if st.checkbox(f"Show Raw Data Table ({start_date} to {end_date})"):
+        st.subheader("Raw Data")
+        st.dataframe(df_filtered)
+
+elif df_cleaned.empty:
+    st.error("Data could not be loaded. Please check the CSV file.")
+else:
+    st.warning("Please select a valid date range in the sidebar.")
