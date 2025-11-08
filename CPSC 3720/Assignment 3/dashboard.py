@@ -29,7 +29,7 @@ else:
     df_weather = pd.DataFrame()
 
 # Sidebar Controls
-st.sidebar.header("Dashboard Controls")
+st.sidebar.header("AESO Data Dashboard Controls")
 if not df_aeso.empty:
 
     window_days = st.sidebar.slider(
