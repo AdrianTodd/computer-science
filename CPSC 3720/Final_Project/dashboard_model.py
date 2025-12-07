@@ -89,7 +89,7 @@ def load_hourly_weather_data(start_date, end_date, latitude=51.05, longitude=-11
         return pd.DataFrame()
 
 
-@st.cache_data(ttl=900)
+@st.cache_data(ttl=3600)
 def fetch_current_weather_data(lat, lon, start_date=None):
     """
     Fetches LIVE/FORECAST weather data from Open-Meteo Forecast API.
@@ -121,7 +121,7 @@ def fetch_current_weather_data(lat, lon, start_date=None):
         return pd.DataFrame()
 
 
-@st.cache_data(ttl=300)
+@st.cache_data(ttl=3600)
 def fetch_realtime_aeso_data(api_key="", start_date=None):
     """
     Fetches the latest grid demand AND pool price from the AESO API.
