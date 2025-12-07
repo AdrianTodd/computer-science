@@ -1,10 +1,6 @@
 import streamlit as st
 import pandas as pd
 import requests
-import urllib3
-
-# Suppress only the single warning from urllib3 needed.
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 ### Data Loading Functions ###
 
@@ -136,14 +132,13 @@ def fetch_realtime_aeso_data(api_key="", start_date=None):
 
     end_date = pd.Timestamp.now()
 
-    # If no start date provided, default to just "today"
+    # If no start date provided, default to today
     if not start_date:
         start_date = end_date
 
     # Ensure start_date is a Timestamp for calculations
     start_dt = pd.to_datetime(start_date)
     print("Start date for AESO fetch:", start_dt)
-    # Create a range of dates to fetch (daily chunks are safest for this API)
     # Using 'D' frequency creates a DatetimeIndex of days
     date_range = pd.date_range(start=start_dt, end=end_date, freq="D")
     print("Date range for AESO fetch:", date_range)

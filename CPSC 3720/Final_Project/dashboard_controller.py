@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 import dashboard_model as model
 import dashboard_view as view
+import dotenv
 
 # Constants
 AESO_DATA_FILE = "Hourly_Metered_Volumes_and_Pool_Price_and_AIL_2020-Jul2025.csv"
-AESO_API_KEY = ""
-# api_key = st.secrets["AESO_API_KEY"]
+AESO_API_KEY = dotenv.get_key(".env", "AESO_API_KEY")
+print("AESO API Key Loaded:", AESO_API_KEY)
 COLS_TO_USE = ["Date_Begin_Local", "ACTUAL_AIL", "ACTUAL_POOL_PRICE"]
 LATITUDE = 51.05
 LONGITUDE = -114.07
